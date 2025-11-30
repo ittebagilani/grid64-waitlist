@@ -1,0 +1,77 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../app/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Answer {
+  id         String   @id
+  userId     String
+  questionId Int
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime
+  value      Int
+  User       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, questionId])
+  @@index([userId])
+}
+
+model Pillar {
+  id        String   @id
+  planId    String
+  title     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime
+  Plan      Plan     @relation(fields: [planId], references: [id], onDelete: Cascade)
+  Task      Task[]
+
+  @@index([planId])
+}
+
+model Plan {
+  id        String   @id
+  userId    String
+  goal      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime
+  isActive  Boolean  @default(true)
+  Pillar    Pillar[]
+  User      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([userId, isActive])
+}
+
+model Task {
+  id        String   @id
+  pillarId  String
+  order     Int
+  content   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime
+  Pillar    Pillar   @relation(fields: [pillarId], references: [id], onDelete: Cascade)
+
+  @@unique([pillarId, order])
+}
+
+model User {
+  id          String   @id
+  email       String   @unique
+  name        String?
+  clerkId     String   @unique
+  createdAt   DateTime @default(now())
+  isFirstUser Boolean  @default(true)
+  isPremium   Boolean  @default(false)
+  Answer      Answer[]
+  Plan        Plan[]
+}
+
+model WaitlistEmail {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  createdAt DateTime @default(now())
+}

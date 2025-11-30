@@ -6,7 +6,7 @@ import Navbar from "./navbar";
 const HomeLayout = () => {
   const [offset, setOffset] = useState({ x: 0, y: 0 });
   const [email, setEmail] = useState("");
-  const [status, setStatus] = useState<null | "success" | "error">(null);
+  const [status, setStatus] = useState<null | string>(null);
 
   const handleMove = (e: any) => {
     const x = (e.clientX / window.innerWidth - 0.5) * 10;
@@ -15,31 +15,34 @@ const HomeLayout = () => {
   };
 
   const handleSubmit = async () => {
-  const emailTrimmed = email.trim();
+    const emailTrimmed = email.trim();
 
-  if (!emailTrimmed || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailTrimmed)) {
-    setStatus("error");
-    return;
-  }
+    if (!emailTrimmed || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailTrimmed)) {
+      setStatus("invalid");
+      return;
+    }
 
-  try {
-    const res = await fetch("/api/waitlist", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email: emailTrimmed }),
-    });
+    try {
+      const res = await fetch("/api/waitlist", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: emailTrimmed }),
+      });
 
-    if (res.ok) {
-      setStatus("success");
-      setEmail("");
-    } else {
+      const data = await res.json();
+
+      if (res.ok) {
+        setStatus("success");
+        setEmail("");
+      } else if (data.error === "Email already registered") {
+        setStatus("duplicate");
+      } else {
+        setStatus("error");
+      }
+    } catch {
       setStatus("error");
     }
-  } catch {
-    setStatus("error");
-  }
-};
-
+  };
 
   return (
     <div className="w-screen h-screen bg-black p-4 overflow-hidden">
@@ -97,10 +100,20 @@ const HomeLayout = () => {
             </button>
 
             {status === "success" && (
-              <p className="text-green-600 mt-2">you&apos;re on the waitlist!</p>
+              <p className="text-green-600 mt-2">
+                you&apos;re on the waitlist!
+              </p>
+            )}
+            {status === "duplicate" && (
+              <p className="text-yellow-600 mt-2">email already registered.</p>
+            )}
+            {status === "invalid" && (
+              <p className="text-red-600 mt-2">please enter a valid email.</p>
             )}
             {status === "error" && (
-              <p className="text-red-600 mt-2">something went wrong. try again.</p>
+              <p className="text-red-600 mt-2">
+                something went wrong. try again.
+              </p>
             )}
           </div>
         </div>

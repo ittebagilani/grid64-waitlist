@@ -15,25 +15,31 @@ const HomeLayout = () => {
   };
 
   const handleSubmit = async () => {
-    if (!email || !email.includes("@")) return;
+  const emailTrimmed = email.trim();
 
-    try {
-      const res = await fetch("/api/waitlist", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email }),
-      });
+  if (!emailTrimmed || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailTrimmed)) {
+    setStatus("error");
+    return;
+  }
 
-      if (res.ok) {
-        setStatus("success");
-        setEmail("");
-      } else {
-        setStatus("error");
-      }
-    } catch {
+  try {
+    const res = await fetch("/api/waitlist", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email: emailTrimmed }),
+    });
+
+    if (res.ok) {
+      setStatus("success");
+      setEmail("");
+    } else {
       setStatus("error");
     }
-  };
+  } catch {
+    setStatus("error");
+  }
+};
+
 
   return (
     <div className="w-screen h-screen bg-black p-4 overflow-hidden">
